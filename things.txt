@@ -1,0 +1,89 @@
+exports = async function (payload) {
+   const mongodb = context.services.get("mongodb-atlas");
+   const db = mongodb.db("TasksDB");
+   const coll = db.collection("TasksCol");
+   
+
+         return {
+               text: `Commands are: \n -*/p_summary* (shows all the tasks and if they have been assigned), \n -*/t_progress <name>* (shows all info about one task) \n -*/add <task name> , <days-to-complete>* (adds a task to the list)  `
+         }
+      
+        
+   
+}
+
+
+// This function is the webhook's request handler.
+exports = async function(payload) {
+    const mongodb = context.services.get("mongodb-atlas");
+   const db = mongodb.db("TasksDB");
+   const coll = db.collection("TasksCol");
+   
+    const findresult = await coll.find({}).toArray();
+    const p_result = findresult.map( x => `- *${x.name}*: status is _${x.status}_ ${x.status!='not_started' ? `, assigned to @${x.assigned_to}` :''}`).join("\n");
+    return {
+        type: "mrkdwn",
+        text: `Tasks as of ${new Date().toLocaleString()}:\n${p_result}`
+       }
+}
+
+
+// This function is the webhook's request handler.
+exports = async function(payload) {
+    const mongodb = context.services.get("mongodb-atlas");
+   const db = mongodb.db("TasksDB");
+   const coll = db.collection("TasksCol");
+   const args = payload.query.text
+   
+  const findtask = await coll.find({
+               name: {
+                   $eq: args.toLowerCase()
+              }}).toArray();
+  
+  const t_result = findtask.map( x => `*${x.name}* \n status is _${x.status}_${x.status!='not_started' ? `\n assigned to @${x.assigned_to}` :''} \ncompletetion is at ${x.percentage_complete}% \nestimated days till completion: ${x.days_to_complete}`);
+  if (t_result==''){
+    return{
+      text: `Task ${args.toLowerCase()} not found, try again. /p_summary has a list of all tasks`
+  }}else{
+         return {
+     text: `Task ${t_result}\n`
+         }
+ }
+}
+
+
+
+
+exports = async function(payload) {
+    const mongodb = context.services.get("mongodb-atlas");
+   const db = mongodb.db("TasksDB");
+   const coll = db.collection("TasksCol");
+   
+    const args = payload.query.text.split(",");
+    if(args.length != 2){
+      return{
+          type: "mrkdwn",
+         text: `There should be only two arguments: *task name* and the *predicted days to complete* separated by a comma`
+      }
+    }
+    const result = await coll.insertOne({
+               name: args[0].toLowerCase().trim(),
+               status:"not_started",
+               days_to_complete: parseInt(args[1]),
+               percentage_complete:0,
+               assigned_to:"",
+               deleted:false
+           });
+  
+          if (result) {
+               return {
+                   type: "mrkdwn",
+                   text: `Added task *${args[0]}*`
+               };
+           }
+           return {
+               text: `Error adding task`
+              
+           };
+}
+
