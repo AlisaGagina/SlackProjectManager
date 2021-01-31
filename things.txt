@@ -5,14 +5,14 @@ exports = async function (payload) {
    
 
          return {
-               text: `Commands are: \n -*/p_summary* (shows all the tasks and if they have been assigned), \n -*/t_progress <name>* (shows all info about one task) \n -*/add <task name> , <days-to-complete>* (adds a task to the list)  `
+               text: `Commands are: \n -*/all_tasks* (shows all the tasks and if they have been assigned), \n -*/task_info <name>* (shows all info about one task) \n -*/add <task name> , <days-to-complete>* (adds a task to the list)  \n */morning* to assign yourself tasks in the morning, as well as */evening" to update task progress in the evening `
          }
       
         
    
 }
 
-
+//for all_tasks
 // This function is the webhook's request handler.
 exports = async function(payload) {
     const mongodb = context.services.get("mongodb-atlas");
@@ -27,7 +27,7 @@ exports = async function(payload) {
        }
 }
 
-
+// for task_info
 // This function is the webhook's request handler.
 exports = async function(payload) {
     const mongodb = context.services.get("mongodb-atlas");
@@ -53,7 +53,7 @@ exports = async function(payload) {
 
 
 
-
+//for add task
 exports = async function(payload) {
     const mongodb = context.services.get("mongodb-atlas");
    const db = mongodb.db("TasksDB");
